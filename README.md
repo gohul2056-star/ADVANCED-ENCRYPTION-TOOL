@@ -38,3 +38,6 @@ A browser-based file encryption and decryption utility built with HTML, CSS, and
 
 All operations are performed in-browser using Web Crypto APIs—no server interaction required.
 
+---
+<img width="1913" height="992" alt="Image" src="https://github.com/user-attachments/assets/3df6bfd3-f787-498e-8718-b763d2f60e60" />
+

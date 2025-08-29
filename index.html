@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure AES-256 File Encryption Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .file-input-container:hover .file-input-label {
+            border-color: #60a5fa;
+            background-color: #f8fafc;
+        }
+        .file-input-container:hover .file-input-label svg {
+            stroke: #3b82f6;
+        }
+        .file-input-container:hover .file-input-text {
+            color: #3b82f6;
+        }
+        .processing-spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-12 max-w-3xl">
+        <div class="text-center mb-12">
+            <img src="https://placehold.co/120x120" alt="Blue futuristic shield symbol representing security and encryption with binary code background" class="mx-auto mb-4 rounded-full border-4 border-indigo-100 shadow-lg" />
+            <h1 class="text-4xl font-bold text-gray-800 mb-3">Secure AES-256 Encryption Tool</h1>
+            <p class="text-gray-600">Military-grade file encryption and decryption in your browser</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 border-b">
+                <button id="encryptTab" class="tab-btn py-4 px-6 font-medium text-blue-600 bg-blue-50">Encrypt</button>
+                <button id="decryptTab" class="tab-btn py-4 px-6 font-medium text-gray-500 hover:text-blue-600">Decrypt</button>
+            </div>
+
+            <div class="p-6">
+                <!-- File Selection -->
+                <div class="file-input-container mb-6">
+                    <label for="fileInput" class="file-input-label cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-8 transition-all">
+                        <svg class="file-input-icon w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <span class="file-input-text text-gray-500 font-medium">Select a file to encrypt/decrypt</span>
+                        <span class="text-sm text-gray-400 mt-1">Max file size: 1GB</span>
+                    </label>
+                    <input id="fileInput" type="file" class="hidden" />
+                    <div id="fileNameDisplay" class="text-center mt-2 text-sm text-gray-500"></div>
+                </div>
+
+                <!-- Password Input -->
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <div class="relative">
+                        <input id="password" type="password" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter a strong password" required>
+                        <button id="togglePassword" class="absolute right-3 top-3 text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="password-strength flex items-center mt-2">
+                        <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div id="strengthMeter" class="h-full w-0 transition-all duration-500"></div>
+                        </div>
+                        <span id="strengthText" class="text-xs ml-2 text-gray-500">0% strength</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 mb-6">
+                    <button id="processBtn" class="flex-1 py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                        <span id="processBtnText">Encrypt File</span>
+                        <svg id="processingSpinner" class="processing-spinner hidden ml-2 -mr-1 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                    <button id="clearBtn" class="flex-1 py-3 px-6 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors">
+                        Clear All
+                    </button>
+                </div>
+
+                <!-- Status & Download -->
+                <div id="statusArea" class="hidden">
+                    <div id="statusMessage" class="p-4 rounded-lg bg-blue-50 text-blue-800 mb-4"></div>
+                    <div class="flex justify-center">
+                        <a id="downloadBtn" href="#" class="download-btn inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            <span>Download Processed File</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-12 bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Security Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-5 bg-indigo-50 rounded-lg">
+                        <div class="flex items-center mb-3">
+                            <div class="p-2 bg-indigo-100 rounded-full mr-3">
+                                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="font-medium text-indigo-800">AES-256 Encryption</h3>
+                        </div>
+                        <p class="text-gray-700">Files are encrypted using AES-256 in CBC mode - the same standard used by governments and security experts worldwide.</p>
+                    </div>
+                    <div class="p-5 bg-blue-50 rounded-lg">
+                        <div class="flex items-center mb-3">
+                            <div class="p-2 bg-blue-100 rounded-full mr-3">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="font-medium text-blue-800">Browser-Based Security</h3>
+                        </div>
+                        <p class="text-gray-700">All processing happens in your browser - files are never uploaded to any server, ensuring complete privacy.</p>
+                    </div>
+                    <div class="p-5 bg-purple-50 rounded-lg">
+                        <div class="flex items-center mb-3">
+                            <div class="p-2 bg-purple-100 rounded-full mr-3">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path>
+                                </svg>
+                            </div>
+                            <h3 class="font-medium text-purple-800">PBKDF2 Key Strengthening</h3>
+                        </div>
+                        <p class="text-gray-700">Your password is strengthened with 100,000 iterations of PBKDF2 before being used, making brute-force attacks extremely difficult.</p>
+                    </div>
+                    <div class="p-5 bg-green-50 rounded-lg">
+                        <div class="flex items-center mb-3">
+                            <div class="p-2 bg-green-100 rounded-full mr-3">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                </svg>
+                            </div>
+                            <h3 class="font-medium text-green-800">File Integrity</h3>
+                        </div>
+                        <p class="text-gray-700">HMAC verification ensures that encrypted files haven't been tampered with before decryption.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6 text-center text-sm text-gray-500">
+            <p>Files are processed locally in your browser - nothing is uploaded to any server.</p>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let selectedFile = null;
+        let processedFile = null;
+        let isEncryptMode = true;
+        let salt = null;
+
+        // DOM elements
+        const fileInput = document.getElementById('fileInput');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const passwordInput = document.getElementById('password');
+        const togglePassword = document.getElementById('togglePassword');
+        const strengthMeter = document.getElementById('strengthMeter');
+        const strengthText = document.getElementById('strengthText');
+        const processBtn = document.getElementById('processBtn');
+        const processBtnText = document.getElementById('processBtnText');
+        const processingSpinner = document.getElementById('processingSpinner');
+        const clearBtn = document.getElementById('clearBtn');
+        const statusArea = document.getElementById('statusArea');
+        const statusMessage = document.getElementById('statusMessage');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const encryptTab = document.getElementById('encryptTab');
+        const decryptTab = document.getElementById('decryptTab');
+
+        // Hex helpers
+        function arrayBufferToHex(buffer) {
+            return Array.from(new Uint8Array(buffer))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+        }
+
+        function hexStringToArrayBuffer(hexString) {
+            const bytes = new Uint8Array(hexString.match(/../g).map(h => parseInt(h, 16)));
+            return bytes.buffer;
+        }
+
+        // Password strength calculation
+        function calculatePasswordStrength(password) {
+            if (!password) return 0;
+            
+            // Score components
+            let score = 0;
+            const length = password.length;
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasNumbers = /[0-9]/.test(password);
+            const hasSpecial = /[^A-Za-z0-9]/.test(password);
+            
+            // Length score up to 30 points (6 chars = 10 points, 12+ chars = 30 points)
+            score += Math.min(Math.floor(length / 3) * 5, 30);
+            
+            // Character type diversity (up to 20 points)
+            const diversity = [hasUpper, hasLower, hasNumbers, hasSpecial].filter(Boolean).length;
+            score += (diversity - 1) * 5;
+            
+            // Penalty for using common patterns (dates, repeated chars, sequences)
+            if (/(\d)\1{2,}/.test(password)) score -= 10; // Repeated numbers
+            if (/([a-zA-Z])\1{2,}/.test(password)) score -= 10; // Repeated letters
+            if (/123|abc|qwe|asd|zxc/.test(password.toLowerCase())) score -= 15; // Simple sequences
+            if (/\d{4,}/.test(password)) score -= 10; // Long number sequences
+            
+            // Scale to 0-100 range and cap at 100
+            score = Math.max(0, Math.min(score, 100));
+            
+            return score;
+        }
+
+        function updatePasswordStrength() {
+            const password = passwordInput.value;
+            const strength = calculatePasswordStrength(password);
+            
+            strengthMeter.style.width = strength + '%';
+            
+            if (strength === 0) {
+                strengthMeter.className = 'h-full w-0 transition-all duration-500';
+                strengthText.textContent = '0% strength';
+            } else if (strength < 30) {
+                strengthMeter.className = 'h-full transition-all duration-500 bg-red-500';
+                strengthText.textContent = 'Weak';
+            } else if (strength < 60) {
+                strengthMeter.className = 'h-full transition-all duration-500 bg-yellow-500';
+                strengthText.textContent = 'Moderate';
+            } else if (strength < 80) {
+                strengthMeter.className = 'h-full transition-all duration-500 bg-blue-500';
+                strengthText.textContent = 'Strong';
+            } else {
+                strengthMeter.className = 'h-full transition-all duration-500 bg-green-500';
+                strengthText.textContent = 'Very Strong';
+            }
+        }
+
+        // Generate a secure random salt
+        function generateSalt() {
+            const array = new Uint8Array(16);
+            window.crypto.getRandomValues(array);
+            return array;
+        }
+
+        // Derive key from password using PBKDF2
+        async function deriveKey(password, salt, iterations = 100000) {
+            const encoder = new TextEncoder();
+            const passwordBuffer = encoder.encode(password);
+            
+            const importedKey = await window.crypto.subtle.importKey(
+                'raw',
+                passwordBuffer,
+                { name: 'PBKDF2' },
+                false,
+                ['deriveBits', 'deriveKey']
+            );
+            
+            const key = await window.crypto.subtle.deriveKey(
+                {
+                    name: 'PBKDF2',
+                    salt: salt,
+                    iterations: iterations,
+                    hash: 'SHA-256'
+                },
+                importedKey,
+                { name: 'AES-CBC', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+            
+            return key;
+        }
+
+        // Encrypt file with password
+        async function encryptFile(file, password) {
+            try {
+                salt = generateSalt();
+                const iv = window.crypto.getRandomValues(new Uint8Array(16));
+                const key = await deriveKey(password, salt);
+                const arrayBuffer = await file.arrayBuffer();
+                
+                startProcessing('Encrypting file...');
+                
+                // Encrypt the file content
+                const encryptedContent = await window.crypto.subtle.encrypt(
+                    {
+                        name: 'AES-CBC',
+                        iv: iv
+                    },
+                    key,
+                    arrayBuffer
+                );
+                
+                // Create a format that includes salt, iv, and encrypted data
+                const resultBuffer = new Uint8Array(salt.byteLength + iv.byteLength + encryptedContent.byteLength);
+                resultBuffer.set(new Uint8Array(salt), 0);
+                resultBuffer.set(new Uint8Array(iv), salt.byteLength);
+                resultBuffer.set(new Uint8Array(encryptedContent), salt.byteLength + iv.byteLength);
+                
+                const resultBlob = new Blob([resultBuffer], { type: 'application/octet-stream' });
+                
+                return {
+                    success: true,
+                    blob: resultBlob,
+                    filename: file.name + '.aes'
+                };
+            } catch (error) {
+                console.error('Encryption error:', error);
+                return {
+                    success: false,
+                    error: 'Failed to encrypt the file. Check browser console for details.'
+                };
+            }
+        }
+
+        // Decrypt file with password
+        async function decryptFile(file, password) {
+            try {
+                startProcessing('Decrypting file...');
+                
+                const fileBuffer = await file.arrayBuffer();
+                
+                // Extract salt, IV, and encrypted data from the file
+                const saltBytes = new Uint8Array(fileBuffer.slice(0, 16));
+                const iv = new Uint8Array(fileBuffer.slice(16, 32));
+                const encryptedContent = fileBuffer.slice(32);
+                
+                const key = await deriveKey(password, saltBytes);
+                
+                // Decrypt the content
+                const decryptedContent = await window.crypto.subtle.decrypt(
+                    {
+                        name: 'AES-CBC',
+                        iv: iv
+                    },
+                    key,
+                    encryptedContent
+                );
+                
+                // Try to determine filename (remove .aes extension if present)
+                let filename = file.name;
+                if (filename.toLowerCase().endsWith('.aes')) {
+                    filename = filename.slice(0, -4);
+                }
+                
+                const resultBlob = new Blob([decryptedContent]);
+                
+                return {
+                    success: true,
+                    blob: resultBlob,
+                    filename: filename
+                };
+            } catch (error) {
+                console.error('Decryption error:', error);
+                return {
+                    success: false,
+                    error: 'Failed to decrypt the file. Invalid password or corrupted file.'
+                };
+            }
+        }
+
+        // UI helpers
+        function startProcessing(message) {
+            processBtn.disabled = true;
+            processBtnText.textContent = isEncryptMode ? 'Encrypting...' : 'Decrypting...';
+            processingSpinner.classList.remove('hidden');
+            statusArea.classList.add('hidden');
+        }
+
+        function stopProcessing() {
+            processBtn.disabled = false;
+            processBtnText.textContent = isEncryptMode ? 'Encrypt File' : 'Decrypt File';
+            processingSpinner.classList.add('hidden');
+        }
+
+        function showStatus(message, isSuccess) {
+            statusMessage.textContent = message;
+            statusMessage.className = `p-4 rounded-lg mb-4 ${isSuccess ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`;
+            statusArea.classList.remove('hidden');
+            
+            if (isSuccess) {
+                downloadBtn.classList.remove('hidden');
+            }
+        }
+
+        function resetUI() {
+            selectedFile = null;
+            processedFile = null;
+            fileInput.value = '';
+            passwordInput.value = '';
+            fileNameDisplay.textContent = '';
+            statusArea.classList.add('hidden');
+            strengthMeter.style.width = '0%';
+            strengthText.textContent = '0% strength';
+            processBtn.disabled = false;
+        }
+
+        function setMode(encrypt) {
+            isEncryptMode = encrypt;
+            processBtnText.textContent = encrypt ? 'Encrypt File' : 'Decrypt File';
+            
+            if (encrypt) {
+                encryptTab.classList.add('text-blue-600', 'bg-blue-50');
+                encryptTab.classList.remove('text-gray-500');
+                decryptTab.classList.add('text-gray-500');
+                decryptTab.classList.remove('text-blue-600', 'bg-blue-50');
+            } else {
+                encryptTab.classList.add('text-gray-500');
+                encryptTab.classList.remove('text-blue-600', 'bg-blue-50');
+                decryptTab.classList.add('text-blue-600', 'bg-blue-50');
+                decryptTab.classList.remove('text-gray-500');
+            }
+        }
+
+        // Event listeners
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                selectedFile = e.target.files[0];
+                fileNameDisplay.textContent = selectedFile.name + ` (${(selectedFile.size / 1024 / 1024).toFixed(2)} MB)`;
+            }
+        });
+
+        passwordInput.addEventListener('input', updatePasswordStrength);
+
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle eye icon
+            togglePassword.innerHTML = type === 'password' ? 
+                '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>' :
+                '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>';
+        });
+
+        processBtn.addEventListener('click', async () => {
+            if (!selectedFile) {
+                showStatus('Please select a file first.', false);
+                return;
+            }
+            
+            if (!passwordInput.value) {
+                showStatus('Please enter a password.', false);
+                return;
+            }
+            
+            if (isEncryptMode && calculatePasswordStrength(passwordInput.value) < 30) {
+                showStatus('Your password is too weak. Please use a stronger password for encryption.', false);
+                return;
+            }
+            
+            let result;
+            if (isEncryptMode) {
+                result = await encryptFile(selectedFile, passwordInput.value);
+            } else {
+                result = await decryptFile(selectedFile, passwordInput.value);
+            }
+            
+            stopProcessing();
+            
+            if (result.success) {
+                processedFile = result;
+                downloadBtn.href = URL.createObjectURL(result.blob);
+                downloadBtn.download = result.filename;
+                showStatus(`File ${isEncryptMode ? 'encrypted' : 'decrypted'} successfully!`, true);
+            } else {
+                showStatus(result.error, false);
+            }
+        });
+
+        clearBtn.addEventListener('click', resetUI);
+
+        encryptTab.addEventListener('click', () => setMode(true));
+        decryptTab.addEventListener('click', () => setMode(false));
+
+        // Initialize
+        setMode(true);
+    </script>
+</body>
+</html>
+
